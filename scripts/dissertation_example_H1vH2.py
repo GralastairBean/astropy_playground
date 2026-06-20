@@ -2,56 +2,61 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Prints a 10-line empty gap at the start of your terminal run
-print("\n" * 10)
+# Print empty gap at the start of terminal for clean run
+print("\n" * 5)
 print("===================================================")
 print("LARGE SCALE GALACTIC DATAFRAME CLEANING AND CUTTING")
 print("===================================================")
 
-# Force terminal to display all rows without hiding anything
-pd.set_option("display.max_rows", None)
+# To Force terminal to display all rows without hiding anything uncomment below line...
+# pd.set_option("display.max_rows", None)
 
-
-num_stars = 50000  # Increased slightly to ensure we have enough stars to plot cleanly
+# set number of starts for the simulation
+num_stars = 50000
 
 # 1. Generate realistic mock Gaia data
+print("ANALYSIS STEP 1: Generate realistic mock Gaia data")
 mock_data = {
     "source_id": np.arange(1000000, 1000000 + num_stars),
     "parallax": np.random.uniform(0.5, 50.0, num_stars),
     "ruwe": np.random.exponential(scale=0.2, size=num_stars) + 0.9,
     "v_velocity": np.random.normal(loc=-25.0, scale=15.0, size=num_stars),
-    # Added mock Galactic height (z) in parsecs between -500 and 500 pc
     "z_height": np.random.normal(loc=0.0, scale=150.0, size=num_stars)
 }
+print(f"Generated mock Gaia data for {num_stars} stars")
+print("-----------------------------------------\n")
 
-# 2. Pack everything into our main DataFrame variable: df
+
+# 2. Pack everything into the main DataFrame variable: df
+print("ANALYSIS STEP 2: Generate main DataFrame variable")
 df = pd.DataFrame(mock_data)
 
 print(f"Successfully generated 'df' containing {len(df)} stars.")
-print("\nFirst 10 rows of the raw dataset:")
-print(df.head(10))
+print(df.head(100)) #arbitrarily large number tyo force terminal to show first and last 5 rows
 print("-----------------------------------------\n")
 
 
-print("ANALYSIS STEP 1: Calculate Physical Distances")
+# 3. Calculate Physical Distances and add to df
+print("ANALYSIS STEP 3: Calculate Physical Distances")
 # Distance (pc) = 1000 / parallax (mas)
 df["distance_pc"] = 1000.0 / df["parallax"]
 print("\nDistances calculated and appended to df.")
-print(df.head(10))
+print(df.head(100))
 print("-----------------------------------------\n")
 
 
-print("\nANALYSIS STEP 2: Apply Thesis Quality Cuts")
-# Rule: Must be within 500 pc AND have a reliable astrometric fit (ruwe < 1.4)
+# 4. Apply Filter Quality Cuts, Rule: Must be within 500 pc AND have a reliable astrometric fit (ruwe < 1.4)
+print("\nANALYSIS STEP 4: Apply Filter Quality Cuts: <500 pc AND have reliable astrometric fit (ruwe < 1.4)")
 quality_filter = (df["distance_pc"] <= 500.0) & (df["ruwe"] < 1.4)
 clean_df = df[quality_filter].copy() # Using .copy() avoids a common pandas warning
 
 print(f" -> Original stars: {len(df)}")
-print(f" -> Stars matching cuts: {len(clean_df)}")
 print(f" -> Eliminated stars: {len(df) - len(clean_df)}")
+print(f" -> Stars matching cuts: {len(clean_df)}")
 
 
-print("\nANALYSIS STEP 3: Split into Hercules 1 and Hercules 2 Substructures")
+# 5. Split into Hercules 1 and Hercules 2 Substructures based on velocity boundaries
+print("\nANALYSIS STEP 5: Split into Hercules 1 and Hercules 2 Substructures based on velocity boundaries")
 # Following your thesis protocol, we split the Hercules stream based on velocity boundaries
 h1_filter = (clean_df["v_velocity"] >= -55.0) & (clean_df["v_velocity"] < -43.0)
 h2_filter = (clean_df["v_velocity"] >= -43.0) & (clean_df["v_velocity"] <= -30.0)
@@ -61,9 +66,11 @@ h2_df = clean_df[h2_filter]
 
 print(f" -> Isolated {len(h1_df)} Hercules 1 (H1) members.")
 print(f" -> Isolated {len(h2_df)} Hercules 2 (H2) members.")
+print(f" -> Removed {len(clean_df) - len(h1_df) - len(h2_df)} non-member stars.")
 print("=========================================\n")
 
 
+# 6. Plotting Results
 print("ANALYSIS STEP 4: Advanced Plotting (KDE Curves and CDFs)")
 
 # Initialize a figure with two side-by-side subplots for maximum thesis impact
