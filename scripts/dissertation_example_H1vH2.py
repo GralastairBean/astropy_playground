@@ -33,7 +33,7 @@ print("ANALYSIS STEP 2: Generate main DataFrame variable")
 df = pd.DataFrame(mock_data)
 
 print(f"Successfully generated 'df' containing {len(df)} stars.")
-print(df.head(100)) #arbitrarily large number tyo force terminal to show first and last 5 rows
+print(df.head(num_stars)) #print tabel to see data
 print("-----------------------------------------\n")
 
 
@@ -42,7 +42,7 @@ print("ANALYSIS STEP 3: Calculate Physical Distances")
 # Distance (pc) = 1000 / parallax (mas)
 df["distance_pc"] = 1000.0 / df["parallax"]
 print("\nDistances calculated and appended to df.")
-print(df.head(100))
+print(df.head(num_stars)) #print tabel to see data
 print("-----------------------------------------\n")
 
 
