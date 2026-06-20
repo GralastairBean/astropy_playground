@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Print empty gap at the start of terminal for clean run
 print("\n" * 5)
 print("===================================================")
 print("LARGE SCALE GALACTIC DATAFRAME CLEANING AND CUTTING")
