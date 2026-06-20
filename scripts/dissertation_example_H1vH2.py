@@ -7,6 +7,7 @@ print("\n" * 5)
 print("===================================================")
 print("LARGE SCALE GALACTIC DATAFRAME CLEANING AND CUTTING")
 print("===================================================")
+print(" \n")
 
 # To Force terminal to display all rows without hiding anything uncomment below line...
 # pd.set_option("display.max_rows", None)
@@ -118,8 +119,8 @@ ax2.legend(fontsize=10, loc="lower right")
 plt.suptitle("Vertical Structure Comparison: Hercules 1 vs Hercules 2", fontsize=14, y=0.98)
 plt.tight_layout()
 
-# Save the advanced multi-panel figure
-plt.savefig("scripts/h1_h2_advanced_comparison.png", dpi=300)
+# Save the figure to data file to avoid git tracking of generated figures
+plt.savefig("data/h1_h2_advanced_comparison.png", dpi=300)
 print(" -> Advanced figure saved as: scripts/h1_h2_advanced_comparison.png")
 
 plt.show()
