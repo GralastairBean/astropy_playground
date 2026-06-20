@@ -13,7 +13,7 @@ print(" \n")
 # pd.set_option("display.max_rows", None)
 
 # set number of starts for the simulation
-num_stars = 50000
+num_stars = 25000
 
 # 1. Generate realistic mock Gaia data
 print("ANALYSIS STEP 1: Generate realistic mock Gaia data")
