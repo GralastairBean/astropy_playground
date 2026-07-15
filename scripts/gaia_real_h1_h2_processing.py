@@ -38,11 +38,22 @@ def add_galactocentric_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     galactocentric = skycoord.transform_to(galactocentric_frame)
     enriched = df.copy()
+    x_kpc = galactocentric.x.to_value(u.kpc)
+    y_kpc = galactocentric.y.to_value(u.kpc)
+    cylindrical_radius_kpc = (x_kpc**2 + y_kpc**2) ** 0.5
+
     enriched["distance_pc"] = 1000.0 / enriched["parallax"]
+    enriched["x_kpc"] = x_kpc
+    enriched["y_kpc"] = y_kpc
     enriched["u_velocity_kms"] = galactocentric.v_x.to_value(u.km / u.s)
     enriched["v_velocity_kms"] = galactocentric.v_y.to_value(u.km / u.s)
     enriched["w_velocity_kms"] = galactocentric.v_z.to_value(u.km / u.s)
     enriched["local_v_kms"] = enriched["v_velocity_kms"] - galactocentric_frame.galcen_v_sun.y.to_value(u.km / u.s)
+    enriched["vr_kms"] = (
+        x_kpc * enriched["u_velocity_kms"] + y_kpc * enriched["v_velocity_kms"]
+    ) / cylindrical_radius_kpc
+    # Use the literature sign convention: prograde disk stars have positive Lz.
+    enriched["lz_kpc_kms"] = -(x_kpc * enriched["v_velocity_kms"] - y_kpc * enriched["u_velocity_kms"])
     enriched["z_height_pc"] = galactocentric.z.to_value(u.pc)
     return enriched
 
