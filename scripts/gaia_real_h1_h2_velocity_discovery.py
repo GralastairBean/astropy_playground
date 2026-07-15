@@ -45,6 +45,7 @@ def main() -> None:
     velocity_df = df.dropna(subset=["lz_kpc_kms", "vr_kms"]).copy()
     if velocity_df.empty:
         raise ValueError("No stars with both Lz and Vr values were found in the classified CSV.")
+    n_total = len(velocity_df)
 
     log("Creating Hercules velocity discovery plot...", started_at)
     fig, ax = plt.subplots(1, 1, figsize=(9, 7))
@@ -100,7 +101,11 @@ def main() -> None:
     ax.grid(True, linestyle="--", alpha=0.25)
     handles, labels = ax.get_legend_handles_labels()
     if handles:
-        ax.legend(fontsize=10, loc="upper left")
+        legend = ax.legend(fontsize=10, loc="upper left", labelcolor="white")
+        frame = legend.get_frame()
+        frame.set_facecolor("black")
+        frame.set_alpha(0.35)
+        frame.set_edgecolor("none")
     fig.colorbar(mesh[3], ax=ax, label="Stars per bin")
 
     ax.text(
@@ -113,6 +118,17 @@ def main() -> None:
         transform=ax.transAxes,
         fontsize=9,
         color="white",
+        bbox={"facecolor": "black", "alpha": 0.35, "edgecolor": "none", "pad": 4},
+    )
+    ax.text(
+        0.98,
+        0.95,
+        f"n = {n_total:,}",
+        transform=ax.transAxes,
+        fontsize=10,
+        color="white",
+        ha="right",
+        va="top",
         bbox={"facecolor": "black", "alpha": 0.35, "edgecolor": "none", "pad": 4},
     )
 
