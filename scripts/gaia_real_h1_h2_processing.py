@@ -25,6 +25,7 @@ def log(message: str, started_at: float) -> None:
 
 
 def add_galactocentric_columns(df: pd.DataFrame) -> pd.DataFrame:
+    galactocentric_frame = coord.Galactocentric()
     skycoord = coord.SkyCoord(
         ra=df["ra"].to_numpy() * u.deg,
         dec=df["dec"].to_numpy() * u.deg,
@@ -35,12 +36,13 @@ def add_galactocentric_columns(df: pd.DataFrame) -> pd.DataFrame:
         frame="icrs",
     )
 
-    galactocentric = skycoord.transform_to(coord.Galactocentric())
+    galactocentric = skycoord.transform_to(galactocentric_frame)
     enriched = df.copy()
     enriched["distance_pc"] = 1000.0 / enriched["parallax"]
     enriched["u_velocity_kms"] = galactocentric.v_x.to_value(u.km / u.s)
     enriched["v_velocity_kms"] = galactocentric.v_y.to_value(u.km / u.s)
     enriched["w_velocity_kms"] = galactocentric.v_z.to_value(u.km / u.s)
+    enriched["local_v_kms"] = enriched["v_velocity_kms"] - galactocentric_frame.galcen_v_sun.y.to_value(u.km / u.s)
     enriched["z_height_pc"] = galactocentric.z.to_value(u.pc)
     return enriched
 
@@ -67,9 +69,9 @@ def main() -> None:
     clean_df = df[quality_filter].copy()
     log(f"Quality-cut sample contains {len(clean_df):,} stars.", started_at)
 
-    log("Splitting cleaned sample into Hercules 1 and Hercules 2 groups...", started_at)
-    h1_filter = (clean_df["v_velocity_kms"] >= H1_V_MIN) & (clean_df["v_velocity_kms"] < H1_V_MAX)
-    h2_filter = (clean_df["v_velocity_kms"] >= H2_V_MIN) & (clean_df["v_velocity_kms"] <= H2_V_MAX)
+    log("Splitting cleaned sample into Hercules 1 and Hercules 2 groups using local V velocity...", started_at)
+    h1_filter = (clean_df["local_v_kms"] >= H1_V_MIN) & (clean_df["local_v_kms"] < H1_V_MAX)
+    h2_filter = (clean_df["local_v_kms"] >= H2_V_MIN) & (clean_df["local_v_kms"] <= H2_V_MAX)
 
     h1_df = clean_df[h1_filter].copy()
     h2_df = clean_df[h2_filter].copy()

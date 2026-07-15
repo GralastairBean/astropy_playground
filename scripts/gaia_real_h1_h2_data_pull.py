@@ -34,7 +34,6 @@ QUERY = """
         AND phot_bp_mean_mag IS NOT NULL
         AND phot_rp_mean_mag IS NOT NULL
         AND parallax >= {parallax_min_mas}
-    ORDER BY parallax DESC
 """
 
 
