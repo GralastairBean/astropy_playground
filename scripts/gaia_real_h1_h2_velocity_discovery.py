@@ -10,6 +10,12 @@ import pandas as pd
 CLASSIFIED_CSV_NAME = "gaia_real_h1_h2_classified.csv"
 OUTPUT_PLOT_NAME = "gaia_real_h1_h2_velocity_discovery.png"
 
+# Reference kinematics used for marker overlay (literature-style conventions).
+R0_KPC = 8.2
+VCIRC_LSR_KMS = 232.0
+U_SUN_PEC_KMS = 11.1
+V_SUN_PEC_KMS = 12.24
+
 
 def log(message: str, started_at: float) -> None:
     elapsed_seconds = perf_counter() - started_at
@@ -51,8 +57,12 @@ def main() -> None:
     full_lz_range = (lz_full_low, lz_full_high)
     full_vr_range = (vr_full_low, vr_full_high)
 
-    sun_vr_kms = 0.0
-    sun_lz_kpc_kms = 1900.0
+    lsr_vr_kms = 0.0
+    lsr_lz_kpc_kms = R0_KPC * VCIRC_LSR_KMS
+
+    # U_sun is toward Galactic center, while positive Vr here is outward.
+    sun_vr_kms = -U_SUN_PEC_KMS
+    sun_lz_kpc_kms = R0_KPC * (VCIRC_LSR_KMS + V_SUN_PEC_KMS)
 
     mesh = ax.hist2d(
         velocity_df["vr_kms"],
@@ -66,6 +76,17 @@ def main() -> None:
     ax.set_ylabel("Lz (kpc km/s)", fontsize=11)
     ax.set_xlim(full_vr_range)
     ax.set_ylim(full_lz_range)
+    ax.scatter(
+        lsr_vr_kms,
+        lsr_lz_kpc_kms,
+        marker="o",
+        s=70,
+        facecolor="none",
+        edgecolor="white",
+        linewidths=1.8,
+        zorder=5,
+        label="LSR",
+    )
     ax.scatter(
         sun_vr_kms,
         sun_lz_kpc_kms,
@@ -81,6 +102,19 @@ def main() -> None:
     if handles:
         ax.legend(fontsize=10, loc="upper left")
     fig.colorbar(mesh[3], ax=ax, label="Stars per bin")
+
+    ax.text(
+        0.02,
+        0.02,
+        (
+            f"Refs: R0={R0_KPC:.1f} kpc, Vc={VCIRC_LSR_KMS:.0f} km/s, "
+            f"(U,V)_sun=({U_SUN_PEC_KMS:.1f}, {V_SUN_PEC_KMS:.2f}) km/s"
+        ),
+        transform=ax.transAxes,
+        fontsize=9,
+        color="white",
+        bbox={"facecolor": "black", "alpha": 0.35, "edgecolor": "none", "pad": 4},
+    )
 
     plt.suptitle("Hercules Discovery Step: Parent Lz-Vr Structure", fontsize=14, y=0.98)
     plt.tight_layout()
