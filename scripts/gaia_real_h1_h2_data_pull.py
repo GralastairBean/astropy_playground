@@ -8,8 +8,9 @@ from astroquery.gaia import Gaia
 
 # Proof-of-concept pull settings. Keep this intentionally small so the
 # end-to-end pipeline can be validated quickly before expanding the sample.
+# timing: 100k=40 min, 200k=2hrs...
 PARALLAX_MIN_MAS = 5.0
-ROW_LIMIT = 100000
+ROW_LIMIT = 200000
 MAX_RETRIES = 8
 RETRY_BASE_SECONDS = 60
 
