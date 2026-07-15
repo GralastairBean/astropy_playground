@@ -10,7 +10,8 @@ from astroquery.gaia import Gaia
 # end-to-end pipeline can be validated quickly before expanding the sample.
 PARALLAX_MIN_MAS = 5.0
 ROW_LIMIT = 100000
-MAX_RETRIES = 4
+MAX_RETRIES = 8
+RETRY_BASE_SECONDS = 60
 
 QUERY = """
     SELECT TOP {row_limit}
@@ -55,7 +56,7 @@ def run_query_with_retries(query: str, started_at: float):
         except (ConnectionResetError, TimeoutError, OSError) as exc:
             if attempt == MAX_RETRIES:
                 raise
-            backoff_seconds = 15 * (2 ** (attempt - 1))
+            backoff_seconds = RETRY_BASE_SECONDS * (2 ** (attempt - 1))
             log(
                 (
                     f"Transient Gaia/network error: {exc.__class__.__name__}. "
