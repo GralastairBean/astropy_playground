@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from time import perf_counter
+from time import perf_counter, sleep
 
 import pandas as pd
 from astroquery.gaia import Gaia
@@ -9,7 +9,8 @@ from astroquery.gaia import Gaia
 # Proof-of-concept pull settings. Keep this intentionally small so the
 # end-to-end pipeline can be validated quickly before expanding the sample.
 PARALLAX_MIN_MAS = 5.0
-ROW_LIMIT = 5000
+ROW_LIMIT = 100000
+MAX_RETRIES = 4
 
 QUERY = """
     SELECT TOP {row_limit}
@@ -43,6 +44,28 @@ def log(message: str, started_at: float) -> None:
     print(f"[{timestamp} | +{elapsed_seconds:7.2f}s] {message}", flush=True)
 
 
+def run_query_with_retries(query: str, started_at: float):
+    """Run the Gaia async job with retry/backoff for transient network drops."""
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            log(f"Submitting Gaia query (attempt {attempt}/{MAX_RETRIES})...", started_at)
+            job = Gaia.launch_job_async(query=query)
+            log("Gaia query returned. Loading results into pandas...", started_at)
+            return job.get_results()
+        except (ConnectionResetError, TimeoutError, OSError) as exc:
+            if attempt == MAX_RETRIES:
+                raise
+            backoff_seconds = 15 * (2 ** (attempt - 1))
+            log(
+                (
+                    f"Transient Gaia/network error: {exc.__class__.__name__}. "
+                    f"Retrying in {backoff_seconds}s..."
+                ),
+                started_at,
+            )
+            sleep(backoff_seconds)
+
+
 def main() -> None:
     started_at = perf_counter()
     project_root = Path(__file__).resolve().parents[1]
@@ -60,10 +83,7 @@ def main() -> None:
         started_at,
     )
     query = QUERY.format(parallax_min_mas=PARALLAX_MIN_MAS, row_limit=ROW_LIMIT)
-    job = Gaia.launch_job_async(query=query)
-
-    log("Gaia query returned. Loading results into pandas...", started_at)
-    table = job.get_results()
+    table = run_query_with_retries(query=query, started_at=started_at)
     df = table.to_pandas()
     log(f"Loaded {len(df):,} rows.", started_at)
 
